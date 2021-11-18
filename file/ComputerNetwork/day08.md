@@ -163,7 +163,7 @@ TCP 四元组可以唯一的确定一个连接，四元组包括如下：
 
 TCP的全称叫传输控制协议 Transmission Control Protocol
 
-UDP的全称叫用户数据协议 User Data Protocol
+UDP的全称叫用户数据报协议 User DataPrograme Protocol
 
 
 
