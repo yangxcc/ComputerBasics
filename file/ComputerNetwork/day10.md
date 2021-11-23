@@ -1,5 +1,9 @@
 ## Socket编程
 
+
+
+### 基于TCP协议通信的网络编程模型
+
 <img src="../../image/ComputerNetwork/image-20211120123409470.png" alt="image-20211120123409470" style="zoom:67%;" />
 
 - 客户端和服务端初始化socket，得到各自的文件描述符
@@ -72,9 +76,32 @@ int listen(int socketfd, int backlog)
 
 
 
+### 基于UDP协议通信的网络编程模型
+
+<img src="../../image/ComputerNetwork/image-20211123165603176.png" alt="image-20211123165603176" style="zoom:80%;" />
+
+因为UDP是无连接的传输层协议，所以不需要三次握手，也不需要向TCP那样调用`listen`和`connect`，但是UDP通信仍然需要IP地址和端口，所以还需要bind函数
+
+对于UDP来说，不需要维护连接，也就没有了所谓的发送方和传输方，甚至都可以不存在客户端和服务端的概念，只要有一个socket多台机器之间就可以相互通信，因此每一个UDP的socket都需要bind
+
+另外，**每次通信时，都需要调用 sendto 和 recvfrom ，都要传入目标主机的IP地址和端口**
 
 
 
+### 针对本地进程间通信的网络编程模型
+
+- 本地socket编程的接口和IPv4，IPv6套接字编程的接口是一致的，**都可以支持字节流和数据报两种形式**
+- 很明显，**本地socket的效率要比IPv4，IPv6的socket实现高的多**
+
+
+
+对于本地字节流socket，其socket类型是 AF_LOCAL 和 SOCK_STREAM 
+
+对于本地数据报socket，其socket类型是 AF_LOCAL 和 SOCK_DGRAM
+
+
+
+**本地字节流socket和本地数据报socket在bind的时候，不像TCP和UDP那样需要绑定端口号和IP，而是需要绑定一个本地文件，这也是Socket本地通信和网络通信的最大区别**
 
 
 
