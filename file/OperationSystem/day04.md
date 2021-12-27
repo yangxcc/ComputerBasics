@@ -142,6 +142,12 @@ cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size
 
 
 
+<img src="../../image/OperationSystem/image-20211227160600537.png" alt="image-20211227160600537" style="zoom:80%;" />
+
+
+
+
+
 > PS:除了直接映射cache之外，还有其他的映射方法，比如全相连Cache，组相连Cache等，这几种策略的数据结构都比较相似
 
 
