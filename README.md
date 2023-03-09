@@ -1,5 +1,4 @@
 # ComputerBasics
-计算机网络，操作系统，未来会加入对Linux和MySQL的学习
 本仓库记录了找工作过程中学习的一些基础知识，包含操作系统、计算机网络，MySql，Java语言，Golang语言，Redis，消息队列（Kafka），Docker，shell，netty，git，spring。
 
 **<font color="red">写前在最前面：计算机网络和操作系统的知识绝大多数来自于“小林coding”这个微信公众号，CSDN同名</font>**
