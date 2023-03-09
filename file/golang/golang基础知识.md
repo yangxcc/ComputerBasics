@@ -356,9 +356,12 @@ sync.RWMutex
     [new slice] [0 1 2 3]
     ```
 
-    这也是为什么在go中给某个slice添加元素得这么写的原因 `b = append(b, val)`
-
     > [Go语言引用传递与值传递 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/162820450)
+
+    其实上面的这个例子是golang中的append陷阱，因为golang中只存在值传递，所以当slice被传递到get函数中时会拷贝一份slice的结构体`data+len+cap`，所以在函数内外取地址的结果是不同的（虽然两个结构体data指针指向的都是同一块内存，但是结构体本上的地址是不同的）。前面说了，两个结构体指向的是同一块内存，理论上从函数内部修改，对于外部也是可见的？非也！
+
+    - 首先对于在函数内部append造成slice扩容的情况，当slice扩容，底层会开辟出一块新的更大的内存，将旧数据拷贝到新的内存中，所以函数内外两个结构体的data指针指向的都不是同一块内存了，更别说会两者相同了
+    - 第二，如果没有造成扩容，两者指向的还是同一块内存，但是两个结构体中的`len`属性是不一样的，因此最后外面的slice同样是读出不来函数内部的修改
 
     
 
@@ -409,7 +412,7 @@ sync.RWMutex
       使用channel不需要发送任何的数据，只用来通知子协程执行任务，或只用来控制协程并发度
 
       ```go
-      func worker(ch chan struct{}) {
+      func worker(ch chan) {
       	<-ch
       	fmt.Println("do something")
       	close(ch)

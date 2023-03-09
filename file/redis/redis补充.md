@@ -678,3 +678,72 @@ Gossip协议的特点是在节点数量有限的网络中，每个节点都随�
 
 
 
+## Redis分布式锁
+
+我们知道使用redis做缓存存在缓存穿透、缓存雪崩、缓存击穿等问题，解决缓存穿透我们可以使用布隆过滤器（允许一定的误判率）或者缓存一些创建异常key，解决缓存雪崩可以给key设置一个随机的过期时间，解决缓存击穿我们可以使用分布式锁的方式
+
+再说分布式锁之前，我们先来说一下本地锁，因为在Spring中所有的组件在容器中都是单例的，所以我们可以使用`synchronized(this){}`来实现本地锁，但是本地锁存在一个缺陷，那就是当前都是微服务，同一个服务有很多的实例，每个实例中都会实现一个本地锁，比方说对于1000万个请求会负载均衡到100个实例上，需要加100把锁，这样的话会有100个请求打到数据库上。
+
+<img src="../../image/redis/分布式锁1.jpg" style="zoom:80%;" />
+
+如果我们想要所有的请求中只有一个请求能够穿过缓存到达数据库，这是就需要分布式锁，我们可以**借助缓存来实现分布式锁**，其核心想法就是对整个缓存加锁，其中最最核心的要求就是 加锁和解锁操作都得是原子操作。
+
+redis中实现分布式锁可以借助redission，实现分布式锁的过程中还是存在一些坑的，如下
+
+<img src="../../image/redis/分布式锁2.jpg" style="zoom:120%;" />
+
+- 如果某个请求获取到锁之后异常退出，那么这个锁就会一直存在，其他的请求也都进不来了，造成了死锁
+
+所以为了解决这个问题，需要给锁加上一个超时时间，超时之后，锁自动释放，但是这样的话又会出现一个问题，如果当前获取到锁的请求业务执行较慢，锁自动超时释放，后面的请求进来上锁，但是前一个请求这时候执行完毕了，他又会把现在已经不属于他的锁再给删除
+
+![](../../image/redis/分布式锁3.jpg)
+
+所以在加锁和删除锁的时候我们还得加上一个UUID，每个请求只能够删除自己的锁。
+
+
+
+但是上面的过程还有一个问题，那就是业务执行时间过长，锁自动过期，导致其他请求获得锁，如果每个业务都执行的时间比较慢，后面业务执行的时候缓存上的锁都不是自己的了，也会造成严重的事故，为了解决这个问题可以使用**redission中的<font color=red>看门狗机制</font>，也就是能够自动为锁续期。**
+
+> 那业务的机器万一宕机了呢?宕机了定时任务跑不了,就续不了期,那自然30秒之后锁就解开了.
+>
+> 开启了看门狗机制，一定要把锁释放的逻辑放到finally里，出现异常的时候也能够把锁释放了，不然看门狗会一直给锁续期
+
+其实目的就是为了让加锁和删锁操作都是原子性的，也可以结合lua脚本
+
+```java
+public List<CategoryEntity> listTreeCategoryWithDistributedLock() {
+    while (true) {
+        // 1. 抢占分布式锁，加上过期时间，避免由于程序崩溃等原因导致没有将锁删除掉造成的死锁问题
+        // 而且这里需要注意抢占锁和设置过期时间要使用原子操作，而不能分开，分开就有可能出于外部原因导致锁抢占到了，但是没有设置过期时间
+        String token = UUID.randomUUID().toString();  // 为了避免由于业务代码超时，导致请求误删锁
+        Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent("LOCK", token, 30, TimeUnit.SECONDS);
+        if (lock) {
+            // 加锁成功
+            List<CategoryEntity> result;
+            try {
+                result = listTree();
+            } finally {
+                // 解锁
+                //                if (Objects.equals(stringRedisTemplate.opsForValue().get("LOCK"), token)) {
+                //                    stringRedisTemplate.delete("LOCK");
+                //                }
+                String scripts = "if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
+                stringRedisTemplate.execute(new DefaultRedisScript<Long>(scripts, Long.class), Collections.singletonList("LOCK"), token);
+            }
+            return result;
+        } else {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // return listTreeCategoryWithDistributedLock();  // 加锁失败，自旋，使用循环实现，递归实现消耗的内存比较多
+        }
+    }
+}
+```
+
+
+
+
+
