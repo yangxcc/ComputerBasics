@@ -377,7 +377,7 @@
     - 第一次握手的SYN包丢失：发送方会触发超时重传，重传时间指数式增长，重传次数通过内核参数`tcp_syn_retires`确定
     - 第二次握手的SYN+ACK包丢失：发送方会触发超时重传，重传SYN包，同时接收方也会超时重传，重传SYN+ACK包，重传次数由内核参数`tcp_synack_retires`确定
     - 第三次握手的ACK包丢失，这时候发送方已经处于`ESTABLISHED`状态，所以重传ACK的次数由`tcp_retires2`确定
-  - TCP快速连接，第一次连接仍然为2RTT，但是服务器会产生一个加密的cookie，客户端缓存到本地，之后连接时客户端的SYN包中会携带这个cookie以及请求数据，这时只需要1RTT，直到cookie过期
+  - **TCP快速连接（TCP fastopen， TFO）**，第一次连接仍然为2RTT，但是服务器会产生一个加密的cookie，客户端缓存到本地，之后连接时客户端的SYN包中会携带这个cookie以及请求数据，这时只需要1RTT，直到cookie过期
   - TCP延迟确认，在接收方开启，通过socket参数`TCP_QUICKACK`设置，Nagle算法在发送方开启，通过socket参数`TCP_NODELAY`确定
 
 
