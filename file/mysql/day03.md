@@ -112,9 +112,12 @@ binlog是逻辑日志，记录内容是语句的原始逻辑，类似于“给ID
 
 不管使用什么存储引擎，**只要发生了<font color=red>表数据更新</font>，就会产生binlog文件**
 
+> binlog中包含了一系列变更数据的操作，例如变更表结构、删除数据、更改/添加数据等DML，DDL，这些操作在binlog中统一称为事件（Event）
 
+MySQL数据库的**数据备份、主从同步**都离不开binlog，需要依靠binlog来同步数据，保证数据一致性
 
-MySQL数据库的**数据备份、主备、主主、主从**都离不开binlog，需要依靠binlog来同步数据，保证数据一致性
+- **主从同步：**在该过程中，binlog用于记录主库的数据变更，然后这些记录被主库内的线程发送至从库，从库的工作线程再把接收到的变更事件放到从库上执行，完成数据同步，主从同步通常会被视为提升数据库吞吐能力的一种方式
+- **数据恢复：**在生产环境中，总是会存在数据意外丢失的情况，在一些数据恢复的场景中，binlog是必不可少的，当数据库从备份中恢复的时候，binlog中所记录的信息会在恢复后的数据上执行，补齐备份数据中未备份的记录
 
 <img src="../../image/MySQL/image-20211208111257141.png" alt="image-20211208111257141" style="zoom:67%;" />
 
@@ -265,6 +268,38 @@ binlog的写入时机也非常简单，在事务执行的过程中，先把日�
 MySQL InnoDB存储引擎通过redo log来实现数据的持久化，通过undo log保证事务的原子性
 
 MySQL数据库的数据备份、主主、主从、主备都离不开bin log，需要依靠bin log来同步数据，保证数据一致性
+
+
+
+## MySQL主从复制
+
+MySQL主从复制需要三个线程：master上的binlog dump thread、slave上的I/O thread和SQL thread
+
+- binlog dump线程：主库中有数据更新时，将更新的事件类型写入到主库的binlog文件中，并创建log dump线程通知slave有数据更新。当slave的I/O线程请求日志内容时，将此时的binlog名称和当前更新的位置同时传给slave的I/O线程
+
+- I/O线程：该线程会连接到master，向log dump线程请求一份指定binlog文件位置的副本，并将请求回来的binlog存到本地的relay log中
+
+  > relay 的中文意思是 中继
+
+- SQL线程：该线程检测到relay log有更新后，会读取并在本地做redo操作，将发生在主库的事件在本地重新执行一遍，来保证主从数据同步
+
+![](../../image/MySQL/主从复制.jpg)
+
+过程解析
+
+1. 主库写入数据并且生成binlog文件，该过程中MySQL将事务串行的写入二进制日志，即使不同事务之间的语句都是交叉执行的
+2. 在事件写入二进制日志完成后，master通知存储引擎提交事务
+3. 从库服务器上的IO线程连接master服务器，请求从指定位置开始读取binlog至从库
+4. 主库接收到从库的IO线程请求后，其上复制的IO线程会根据Slave的请求信息分批读取binlog文件然后返回给从库的IO线程
+5. slave服务器的IO线程获取到master服务器上IO线程发送的日志内容、日志文件及位置点后，会将binlog日志内容依次写到slave端自身的relay log文件的最末端，并将新的binlog文件名和位置记录到master-info文件中，以便下一次读取master端新binlog日志时能告诉master服务器从新binlog日志的指定文件及位置开始读区新的binlog日志内容
+6. 从库服务器的SQL线程会实时监测到本地Relay log中新增了日志内容，然后把Relay Log中的日志翻译成SQL并且按照顺序执行SQL来更新从库的数据
+7. 从库在relay-log.info中记录当前应用中继日志的文件名和位置点以便下一次数据复制
+
+
+
+
+
+
 
 
 
