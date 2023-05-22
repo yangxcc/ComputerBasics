@@ -23,6 +23,23 @@
 
    所以，在一般情况下我们是不会使用查询缓存的，**MySQL 8.0 版本后删除了缓存的功能，**官方也是认为该功能在实际的应用场景比较少，所以干脆直接删掉了。
 
+   > 事实上，MySQL5.7中就已经将查询缓存（Query Cache）的默认值设置成了关闭，这是因为MySQL查询缓存的设计初衷是提高完全相同Query语句的响应速度，MySQL官方文档对查询缓存区域的定义是：这是一块比较独特的缓存区域，用来缓存特征Query的整个结果集信息，且共享给所有客户端，MySQL对查询语句进行hash计算后，把得到的hash值和Query查询的结果集对应存放在查询缓存区域中
+
+   Query Cache的引入带来了一些问题，如下：
+
+   - 对Query语句的要求过于严苛，Query语句发生的任何变化都会导致无法命中缓存
+   - 查询缓存区域的淘汰策略过于严苛，对于表中的任何修改都会导致缓存失效，因此只有在读远大于写的情况下，Query Cache才能够发挥作用，对于读写平衡以及写多读少的场景下，Query Cache很难发挥作用
+   - 当开启Query Cache选项后，如果查询请求没有命中Query Cache的话，MySQL会需要额外的性能开销去处理结果集，也就是将结果集写入到Query Cache中
+
+   ```
+   Assuming that scalability could be improved, the limiting factor of the query cache is that since only queries that hit the cache will see improvement; 
+   it is unlikely to improve predictability of performance. For user facing systems, reducing the variability of performance is often more important than improving peak throughput.
+   假设可扩展性可以得到改善，那么查询缓存的限制因素是，由于只有命中缓存的查询才能得到提高；它不太可能改善性能的可预测性。
+   对于面向用户的系统来说，减少性能的可变性（保证性能稳定）往往比提高峰值吞吐量更重要。
+   ```
+
+   
+
 3. **分析器，**MySQL语句没能命中缓存就会进入分析器，**分析器的作用就是用来分析这条SQL语句是干什么的**，分析器的执行会分成两个部分：
 
    - **词法分析**，看看这个SQL语句的目的是什么，一条SQL语句有多个字符串组成，首先要提取关键字，比如select，提出查询的表，提出字段名，提出查询条件等等，做完这些操作之后就会进入语法分析
@@ -33,6 +50,15 @@
    经过优化器之后，这条SQL语句怎么执行就已经定下来了
 
 5. **执行器，**当确定了执行方案之后，MySQL就准备开始执行了，首先在执行之前会先校验用户的权限，如果没有权限那么会返回信息，如果有权限，就回去调用引擎的接口，返回接口的执行结果
+
+
+
+**MySQL将结果返回给客户端是一个增量、逐步返回的过程，并不一定等到所有的结果集都查出来再返回**
+
+这样做的好处有两个：
+
+- 服务器端无需存储太多的结果，也就不会因为需要返回太多的结果而消耗太多的内存
+- 这样的处理也能够让MySQL客户端第一时间获得返回的结果
 
 
 
@@ -89,3 +115,50 @@ update tb_student A set A.age='19' where A.name=' 张三 ';
 
 
 为了保证redo log和binlog可能导致的数据不一致现象，MySQL使用的是**两阶段提交**
+
+
+
+### explain关键字
+
+explain实际上是用来分析sql语句的一个工具
+
+> 慢查询，其实就是某个查询语句的执行速度慢，这样很容易拖垮整个系统
+
+![](../../image/MySQL/explain.jpg)
+
+- `id`：表示select子句的操作顺序，id越大，优先级越高，越先被执行
+- `select_type`：主要区分普通查询、联合查询、子查询等
+  - `SIMPLE`：普通查询，简单的select查询
+  - `UNION`：如果第二个select出现在union之后，则被标记为union
+  - `PRIMARY`：查询中包含复杂的子部分，最外层会被标记为primary
+  - `SUBQUERY`：在select或者where列表中包含了子查询
+  - `DERIVED`：在from列表中包含的自查询衍生表
+  - `UNION RESULT`：在union表中获取结果的select
+- `table`：这一行数据来源于哪个表
+- **`type`：查询使用了哪种类型**
+  - `system`：一般是查询系统表时
+  - `const`：表示通过索引一次就能找到
+  - `eq_ref`：唯一性索引扫描，对于每个索引键，表示只有一条记录与之匹配，常见于主键索引和唯一键索引
+  - `ref`：非唯一键索引，返回匹配某个单独值的所有行
+  - `range`：只索引给定范围的行，使用一个索引来选择行，一般就是在where语句中出现了between、<、>、in等的查询
+  - `index`：表示使用到了索引
+  - `all`：全表扫描
+- `possible_keys`：可能应用在这张表上的索引，实际上不一定能用得到
+- `key`：实际上使用到的索引，如果没用到为null
+- `key_len`：表示索引中使用的字节数（可能使用的，不是实际的）
+- `ref`：显示索引的哪一列被用到了
+- `rows`：大致估算找出所需的记录要读取的行数
+- `extra`：不适合在其他列显示，但十分重要的额外信息
+  - `Using Index`：表示相应的select操作中使用了覆盖索引，避免访问表的数据行，效率高，如果同时出现了`using where`表明索引被用来执行索引键值查找
+  - `Using Where`：表明使用了where进行过滤
+
+
+
+
+
+
+
+
+
+
+
