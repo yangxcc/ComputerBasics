@@ -521,6 +521,125 @@
 
 
 
+
+
+
+
+37. SpringBoot打成的jar包和普通的jar包有什么区别吗
+
+    SpringBoot中默认打包成的jar叫做可执行jar，这种jar不同于普通的jar，普通的jar不可以通过`java -jar xxx.jar`命令执行，普通jar的主要作用是被其他应用依赖，而SpringBoot打成的jar可以执行，但不能被依赖，如果强制依赖，也无法获取里面的类。
+
+    > 需要注意的是，可执行 jar 并不是 Spring Boot 独有的，Java 工程本身就可以打包成可执行 jar 。
+    >
+    > 对于一个普通的项目，可以使用Maven或者手动打包的方式将其打包成可执行的jar文件，先来看一下手动打包的步骤：
+    >
+    > 1. 编写Main类，该类包含main方法，作为程序的入口点。
+    >
+    > 2. 在命令行中使用`javac Main.java`命令编译Main类
+    >
+    > 3. 在命令行中使用jar命令创建可执行的jar文件 `jar cfe app.jar Main 8.class`
+    >
+    >    其中，app.jar是您要创建的可执行的jar文件的名称，Main是程序的入口点，*.class是所有编译后的class文件。
+    >
+    > 4. 可以使用`java -jar app.jar`来运行程序
+    >
+    > 
+    >
+    > 如果这是一个Maven项目，泽可以使用Maven插件来打包可执行的jar文件。在pom.xml文件中添加以下插件：
+    >
+    > ```xml
+    > <build>
+    >     <plugins>
+    >         <plugin>
+    >             <groupId>org.apache.maven.plugins</groupId>
+    >             <artifactId>maven-jar-plugin</artifactId>
+    >             <version>3.2.0</version>
+    >             <configuration>
+    >                 <archive>
+    >                     <manifest>
+    >                         <addClasspath>true</addClasspath>
+    >                         <mainClass>com.example.Main</mainClass>
+    >                     </manifest>
+    >                 </archive>
+    >             </configuration>
+    >         </plugin>
+    >     </plugins>
+    > </build>
+    > ```
+    >
+    > 其中，com.example.Main是您的程序的入口点。然后，在命令行中运行以下Maven命令：`mvn clean package`Maven将在target目录中生成一个可执行的jar文件，可以使用以下命令运行它`java -jar target/app.jar`
+    
+    可以看到，既然同样是执行 mvn package 命令进行项目打包，为什么 Spring Boot 项目就打成了可执行 jar ，而普通项目则打包成了不可执行 jar 呢？
+    
+    这是因为SpringBoot项目中有一个默认的插件配置`spring-boot-maven-plugin`
+    
+    <img src="./image/spring/jar1.jfif" style="zoom:50%;" />
+    
+    其中`repackage`功能的作用是在打包的时候多做一些额外的事情：
+
+    - 首先`mvn package`命令对项目进行打包，打成一个普通的jar包，可以被其他项目依赖，但不可以被执行
+    - `repackage`则是对第一步中打包产生的jar包再次进行打包，将之打成一个可执行jar，然后再将第一步打成的jar重命名为`*.original`文件
+    
+    <img src="./image/spring/jar2.jfif" style="zoom:50%;" />
+    
+    需要注意的是，`demo1-0.0.1-SNAPSHOT.jar`表示打包成的可执行的文件，而`demo1-0.0.1-SNAPSHOT.jar.original`则是在打包过程中被重命名的jar，这是一个不可执行的jar，但是可以被其他项目所依赖。
+    
+    > 通过`jar xvf xxx.jar`可以解压jar包
+    
+    
+    
+    首先解压可执行文件`demo1-0.0.1-SNAPSHOT.jar`，可以发现，我们自己的代码是存在 于 BOOT-INF/classes/ 目录下
+    
+    <img src="./image/spring/jar3.jfif" style="zoom:50%;" />
+    
+    另外，还有一个 META-INF 的目录，该目录下有一个 MANIFEST.MF 文件，打开该文件，内容如下：
+    
+    <img src="./image/spring/jar4.jfif" style="zoom:50%;" />
+    
+    可以看到，这里定义了一个 Start-Class，这就是可执行 jar 的入口类，Spring-Boot-Classes 表示我们自己代码编译后的位置，Spring-Boot-Lib 则表示项目依赖的 jar 的位置。
+    
+    
+    
+    接着，我们再来看一下不可执行jar包的结构（将默认的后缀 .original 除去，然后给文件重命名，重命名完成，导入idea中查看目录结构）
+    
+    <img src="./image/spring/jar5.jfif" style="zoom:50%;" />
+    
+    解压后可以看到，不可执行 jar 根目录就相当于我们的 classpath，解压之后，直接就能看到我们的代码，它也有 META-INF/MANIFEST.MF 文件，但是文件中没有定义启动类等。
+    
+    <img src="./image/spring/jar6.jfif" style="zoom:50%;" />
+    
+    而且能够发现，不可执行的jar包中也没有讲项目的依赖打包进行
+    
+    **综上，如果自己要打一个可执行 jar 包的话，除了添加相关依赖之外，还需要配置 META-INF/MANIFEST.MF 文件。**
+    
+    那么如何一次性打包两个jar呢？一个可执行，一个可被引用
+    
+    一般来说，SpringBoot 直接打包成可执行 jar 就可以了，不建议将 SpringBoot 作为普通的 jar 被其他的项目所依赖。如果有这种需求，建议将被依赖的部分，单独抽出来做一个普通的 Maven 项目，然后在 Spring Boot 中引用这个 Maven 项目。
+    
+    如果非要将 Spring Boot 打包成一个普通 jar 被其他项目依赖，技术上来说，也是可以的，给 spring-boot-maven-plugin 插件添加如下配置：
+    
+    ```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    ```
+    
+    配置的 classifier 表示可执行 jar 的名字，配置了这个之后，在插件执行 repackage 命令时，就不会给 mvn package 所打成的 jar 重命名了，所以，打包后的 jar 如下：
+    
+    <img src="./image/spring/jar7.jfif" style="zoom:67%;" />
+    
+    第一个 jar 表示可以被其他项目依赖的 jar ，第二个 jar 则表示一个可执行 jar。
+
+
+
 ### MyBatis中的问题
 
 1. `#{}`和`${}`的区别是什么
