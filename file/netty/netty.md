@@ -1,6 +1,6 @@
 ### 什么是Netty
 
-Netty是由JBoss公司提供的一个Java开源框架，是一个**异步事件驱动**的网络应用程序，是目前最流行的**NIO**框架，用于快速开发高性能、高可靠性的网络IO程序
+Netty是由JBoss公司提供的一个**Java**开源框架，是一个**异步事件驱动**的网络应用程序，是目前最流行的**NIO**框架，用于快速开发高性能、高可靠性的网络IO程序
 
 > Dubbo，Elasticsearch内部都使用了Netty
 
@@ -73,6 +73,16 @@ Netty主要是用来做网络通信，比如RPC框架的网络通信工具，实
 对于NIO来说，分成了多路复用NIO和原始的NIO，原始的NIO，在发起IO请求之后会返回，然后轮询直到数据准备好了，也就是被放进了内核缓冲区中，然后再通过系统调用将数据拷贝到用户空间，而多路复用的NIO，是基于事件分发的模式，比如SELECT、POLL、EPOLL等系统调用会在发起IO请求之后返回，释放CPU，直到数据准备好（被拷贝到内核缓冲区中），再以事件通知应用程序进行操作，也就是数据准备阶段CPU可以去处理其他任务，而AIO是异步IO，这种方式上面的两个步骤都不会阻塞，进程发起IO请求之后直接返回，直到数据被加载到内存中，会通过事件通知，进程直接进行处理即可
 
 > 通过上面的描述能够看出，BIO是一个连接对应一个线程，而NIO是一个请求对应一个线程，所有的请求都会被注册到多路复用器上，多路复用器轮询到有IO请求时才会启动一个线程进行处理
+
+
+
+传统的IO是面向字节流（InputStream和OutputStream）或字符流（Reader和Writer）的，以流式的方式顺序的从一个Stream中读取一个或者多个字节，因此也就不能随意改变读取指针的位置。
+
+在NIO中，抛弃了传统的I/O流，而是引入了Channel和Buffer的概念，在NIO中，数据读写都是通过缓冲区（Buffer）来完成的，而缓冲区的读写操作都是通过Channel来进行的。因此，只能从Channel中读取数据到Buffer中，或将数据从Buffer中写入到Channel中。这种基于缓冲区的方式可以减少对底层I/O设备的访问次数，提高性能。
+
+因此，NIO不是基于传统的字节流或字符流，而是使用通道和缓冲区来进行数据的读取和写入。这种方式可以提供更高的性能和更灵活的I/O操作。
+
+
 
 
 
@@ -233,6 +243,12 @@ TCP是面向字节流的协议，也就是一串没有边界的数据，TCP底�
 
 
 
+Netty 的零拷贝主要包含三个方面：
+
+- Netty 的接收和发送 ByteBuffer 采用 DIRECT BUFFERS，使用堆外直接内存进行 Socket 读写，不需要进行字节缓冲区的二次拷贝。如果使用传统的堆内存（HEAP BUFFERS）进行 Socket 读写，JVM 会将堆内存 Buffer 拷贝一份到直接内存中，然后才写入 Socket 中。相比于堆外直接内存，消息在发送过程中多了一次缓冲区的内存拷贝。
+- Netty 提供了组合 Buffer 对象，可以聚合多个 ByteBuffer 对象，用户可以像操作一个 Buffer 那样方便的对组合 Buffer 进行操作，避免了传统通过内存拷贝的方式将几个小 Buffer 合并成一个大的 Buffer。
+- Netty 的文件传输采用了 transferTo 方法，它可以直接将文件缓冲区的数据发送到目标 Channel，避免了传统通过循环 write 方式导致的内存拷贝问题。
+
 ### 长连接、短连接
 
 短连接说的是server和client建立连接之后，读写完成就关闭掉连接，如果下一次再要互相发送消息，就要重新连接
@@ -245,6 +261,12 @@ TCP是面向字节流的协议，也就是一串没有边界的数据，TCP底�
 
 心跳机制的工作原理是: 在 client 与 server 之间在一定时间内没有数据交互（即处于 idle 状态 -- 待机状态）时, 客户端或服务器就会发送一个特殊的数据包给对方, 当接收方收到这个数据报文后, 也立即发送一个特殊的数据报文, 回应发送方, 此即一个 PING-PONG 交互。所以, 当某一端收到心跳消息后, 就知道了对方仍然在线, 这就确保 TCP 连接的有效性。
 **TCP 实际上自带的就有长连接选项，本身是也有心跳包机制**，也就是 TCP 的选项：SO_KEEPALIVE。但 TCP 协议层面的长连接灵活性不够（默认要2个多小时才能够判断出一个死亡连接），所以，一般情况下我们都是在应用层协议上实现自定义心跳机制的，也就是在 Netty 层面通过编码实现。通过 Netty 实现心跳机制的话，核心类是 IdleStateHandler 。
+
+> Netty支持哪些心跳类型设置
+>
+> - readerIdleTime：为读超时时间（即测试端一定时间内未接受到被测试端消息）。
+> - writerIdleTime：为写超时时间（即测试端一定时间内向被测试端发送消息）。
+> - allIdleTime：所有类型的超时时间。
 
 
 
@@ -267,5 +289,21 @@ Netty自己实现了一套轻量级的对象池，在Netty中，通常会有多�
 
 
 
+### NIOEventLoopGroup源码
 
+- NioEventLoopGroup(其实是MultithreadEventExecutorGroup) 内部维护一个类型为 EventExecutor children [], **默认大小是处理器核数 * 2**, 这样就构成了一个线程池，初始化EventExecutor时NioEventLoopGroup重载newChild方法，所以children元素的实际类型为NioEventLoop。
+
+  > 也就是说，默认情况下netty会启动2*cpu处理器个线程，具体是在bind之后启动的
+
+- 线程启动时调用SingleThreadEventExecutor的构造方法，执行NioEventLoop类的run方法，首先会调用hasTasks()方法判断当前taskQueue是否有元素。如果taskQueue中有元素，执行 selectNow() 方法，最终执行selector.selectNow()，该方法会立即返回。如果taskQueue没有元素，执行 select(oldWakenUp) 方法
+- select ( oldWakenUp) 方法**解决了 Nio 中的 bug**，selectCnt 用来记录selector.select方法的执行次数和标识是否执行过selector.selectNow()，若触发了epoll的空轮询bug，则会反复执行selector.select(timeoutMillis)，变量selectCnt 会逐渐变大，当selectCnt 达到阈值（默认512），则执行rebuildSelector方法，进行selector重建，解决cpu占用100%的bug。
+- rebuildSelector方法先通过openSelector方法创建一个新的selector。然后将old selector的selectionKey执行cancel。最后将old selector的channel重新注册到新的selector中。rebuild后，需要重新执行方法selectNow，检查是否有已ready的selectionKey。
+- 接下来调用processSelectedKeys 方法（处理I/O任务），当selectedKeys != null时，调用processSelectedKeysOptimized方法，迭代 selectedKeys 获取就绪的 IO 事件的selectkey存放在数组selectedKeys中, 然后为每个事件都调用 processSelectedKey 来处理它，processSelectedKey 中分别处理OP_READ；OP_WRITE；OP_CONNECT事件。
+- 最后调用runAllTasks方法（非IO任务），该方法首先会调用fetchFromScheduledTaskQueue方法，把scheduledTaskQueue中已经超过延迟执行时间的任务移到taskQueue中等待被执行，然后依次从taskQueue中取任务执行，每执行64个任务，进行耗时检查，如果已执行时间超过预先设定的执行时间，则停止执行非IO任务，避免非IO任务太多，影响IO任务的执行。
+- 每个NioEventLoop对应一个线程和一个Selector，NioServerSocketChannel会主动注册到某一个NioEventLoop的Selector上，NioEventLoop负责事件轮询。
+- Outbound 事件都是请求事件, 发起者是 Channel，处理者是 unsafe，通过 Outbound 事件进行通知，传播方向是 tail到head。Inbound 事件发起者是 unsafe，事件的处理者是 Channel, 是通知事件，传播方向是从头到尾。
+
+内存管理机制，首先会预申请一大块内存Arena，Arena由许多Chunk组成，而每个Chunk默认由2048个page组成。Chunk通过AVL树的形式组织Page，每个叶子节点表示一个Page，而中间节点表示内存区域，节点自己记录它在整个Arena中的偏移地址。当区域被分配出去后，中间节点上的标记位会被标记，这样就表示这个中间节点以下的所有节点都已被分配了。大于8k的内存分配在poolChunkList中，而PoolSubpage用于分配小于8k的内存，它会把一个page分割成多段，进行内存分配。
+
+ByteBuf的特点：支持自动扩容（4M），保证put方法不会抛出异常、通过内置的复合缓冲类型，实现零拷贝（zero-copy）；不需要调用flip()来切换读/写模式，读取和写入索引分开；方法链；引用计数基于AtomicIntegerFieldUpdater用于内存回收；PooledByteBuf采用二叉树来实现一个内存池，集中管理内存的分配和释放，不用每次使用都新建一个缓冲区对象。UnpooledHeapByteBuf每次都会新建一个缓冲区对象。
 
