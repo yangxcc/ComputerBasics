@@ -1662,9 +1662,257 @@ public class MyEnumUseTypeHandler implements TypeHandler<EmpStatus> {
 
 
 
+### ORM是什么
+
+ORM（Object Relational Mapping），对象关系映射，是一种味了解决关系型数据库数据与简单Java对象（POJO）的映射关系的技术。简单的说，ORM是通过使用描述对象和数据库之间映射的元数据，将程序中的对象自动持久化到关系型数据库中。
 
 
 
+### MyBatis的工作原理
+
+<img src="../../image/mybatis/工作原理.jfif" style="zoom:50%;" />
+
+- 读取MyBatis配置文件：mybatis-config.xml为MyBatis的全局配置文件，配置了MyBatis的运行环境等信息，例如数据库连接信息。
+- 加载映射文件：映射文件即SQL映射文件，该文件中配置了操作数据库的SQL语句，需要在MyBatis配置文件mybatis-config.xml中加载，mybatis-config.xml文件可以加载多个映射文件，每格文件对应数据库中的一张表。
+- 构造会话工厂：通过MyBatis的环境等配置信息构建会话工厂SqlSessionFactory
+- 创建会话对象：由会话工厂创建SqlSession对象，该对象中包含了执行SQL语句的所有方法
+- Executor执行器：MyBatis底层定义了一个Executor接口来操作数据库，它将根据SqlSession传递的参数动态地生成需要执行的SQL语句，同时负责查询缓存的维护
+- MappedStatement对象：在Executor接口的执行方法中有一个MappedStatement类型的参数，该参数是对映射信息的封装，用于存储要映射的SQL语句的id、参数等信息
+- 输入参数映射：输入参数类型可以是Map、List等集合类型，也可以是基本数据类型和POJO类型。输入参数映射过程类似于JDBC对preparedStatement对象设置参数的过程
+- 输出结果映射：输出结果类型可以是Map、List等集合类型，也可以是基本数据类型和POJO类型。输出结果映射过程类似于JDBC对结果集的解析过程
+
+总结一下MyBatis的编程步骤：
+
+> 创建SqlSessionFactory
+>
+> 通过SqlSessionFactory创建sqlSession
+>
+> 通过sqlSession执行数据库操作
+>
+> 调用session.commit()提交事务
+>
+> 调用session.close()关闭会话
+
+
+
+### MyBatis中的四大接口
+
+- Executor：Executor是MyBatis的执行器接口，它定义了MyBatis执行SQL语句的方法，包括查询、插入、更新和删除等操作。Executor接口的实现类有SimpleExecutor、ReuseExecutor、BatchExecutor和CachingExecutor等。
+- StatementHandler：StatementHandler是MyBatis的语句处理器接口，它定义了处理SQL语句的方法，包括创建Statement对象、设置参数、执行SQL语句和处理结果集等操作。StatementHandler接口的实现类有SimpleStatementHandler、PreparedStatementHandler和CallableStatementHandler等。
+- ParameterHandler：ParameterHandler是MyBatis的参数处理器接口，它定义了处理SQL语句参数的方法，包括设置参数、获取参数等操作。ParameterHandler接口的实现类有DefaultParameterHandler等。
+- ResultSetHandler：ResultSetHandler是MyBatis的结果集处理器接口，它定义了处理SQL语句结果集的方法，包括将结果集映射成Java对象等操作。ResultSetHandler接口的实现类有DefaultResultSetHandler等。
+
+这四个接口是MyBatis中最重要的接口，它们之间的关系如下：Executor接口负责执行SQL语句，调用StatementHandler接口的方法创建Statement对象、设置参数、执行SQL语句和处理结果集等操作，调用ParameterHandler接口的方法处理SQL语句参数，调用ResultSetHandler接口的方法处理SQL语句结果集。其中，StatementHandler、ParameterHandler和ResultSetHandler接口都是由MyBatis框架提供的默认实现类，也可以通过自定义实现类进行扩展。
+
+
+
+### MyBatis的插件运行原理
+
+Mybatis仅可以编写针对ParameterHandler、ResultSetHandler、StatementHandler、Executor这4种接口的插件，Mybatis使用JDK的动态代理，为需要拦截的接口生成代理对象以实现接口方法拦截功能，每当执行这4种接口对象的方法时，就会进入拦截方法，具体就是InvocationHandler的invoke()方法，当然，只会拦截那些你指定需要拦截的方法。
+
+实现Mybatis的Interceptor接口并复写intercept()方法，然后在给插件编写注解，指定要拦截哪一个接口的哪些方法即可，记住，别忘了在配置文件中配置你编写的插件。
+
+
+
+### MyBatis中有哪些Executor执行器，它们之间的区别是什么？
+
+MyBatis有三种基本的Executor执行器，SimpleExecutor、ReuseExecutor、BatchExecutor
+
+- SimpleExecutor：每执行一次update或select，就开启一个Statement对象，用完立刻关闭Statement对象
+- ReuseExecutor：执行update或select，以sql作为key查找Statement对象，存在就使用，不存在就创建，用完后，不关闭Statement对象，而是放置于Map<String, Statement>内，供下一次使用，简言之，就是重复使用Statement对象
+- BatchExecutor：执行update（没有select，JDBC批处理不支持select），将所有sql都添加到批处理中（addBatch()），等待统一执行（executeBatch()），它缓存了多个Statement对象，每个Statement对象都是addBatch()完毕后，等待逐一执行executeBatch()批处理，与JDBC批处理相同
+
+Executor的这些特点，都严格限制在SqlSession生命周期范围内
+
+
+
+### MyBatis延迟加载
+
+MyBatis仅支持association关联对象和collection关联集合对象的延迟加载，association指的就是一对一，collection指的就是一对多查询。在MyBatis配置文件中，可以配置是否启用延迟加载lazyLoadingEnabled=true|false。
+
+它的原理是使用CGLIB创建目标对象的代理对象，当调用目标方法时，进入拦截器方法，比如调用a.getB().getName()，拦截器invoke()方法发现a.getB()是null值，那么就会单独发送实现保存好的查询关联B对象的sql，把B查询上来，然后调用a.setB(b)，于是a的对象b属性就有值了，接着完成a.getB().getName()方法的调用，这就是延迟加载的基本原理
+
+> MyBatis会在代理对象中维护一个标志位，用于标识关联对象是否已经加载。当第一次调用代理对象的方法时，MyBatis会判断标志位的值，如果关联对象还没有加载，则会通过SQL语句查询关联对象，并将查询结果赋值给代理对象。同时，MyBatis会将标志位的值设置为已加载，以便后续的调用不需要再次查询数据库。
+
+
+
+### 为什么需要预编译
+
+预编译SQL语句可以提高SQL语句的执行效率。在执行SQL语句时，数据库需要对SQL语句进行解析、编译和优化，然后才能执行SQL语句。这个过程需要消耗一定的时间和资源，特别是对于复杂的SQL语句，其开销更加显著。
+
+预编译SQL语句是指在执行SQL语句之前，先将SQL语句编译成一个可执行的对象，然后再将参数传递给该对象进行执行。这样可以避免每次执行SQL语句时都进行编译的开销，从而提高SQL语句的执行效率。
+
+另外，预编译SQL语句还可以提高SQL语句的安全性。在预编译SQL语句中，参数是使用占位符(?)来表示的，而不是直接将参数的值拼接到SQL语句中。因此，即使攻击者在参数中输入了恶意的SQL语句，也不会对SQL语句造成影响，因为预编译SQL语句会将参数的值转义后再传递给数据库。
+
+需要注意的是，预编译SQL语句可以提高SQL语句的执行效率，但是也会占用一定的内存空间。因此，在使用预编译SQL语句时，需要根据具体的业务场景和性能需求进行选择。
+
+> JDBC中使用对象PreparedStatement来预编译SQL语句，预编译之后的SQL多数情况下可以直接执行，数据库不需要再次编译，越复杂的SQL，编译的复杂度越大，预编译阶段可以合并多次操作为一个操作，同时预编译语句对象可以重复利用。把一个SQL预编译后产生的PreparedStatement对象缓存下来，下次对于同一个SQL，可以直接使用这个缓存的PreparedState对象。MyBatis默认情况下，会对所有的SQL进行预编译
+
+
+
+### MyBatis是如何将DAO接口与XML文件对应起来的
+
+首先从流程的角度来说，MyBatis将DAO与XML文件对应起来是通过Mapper接口和Mapper XML文件的命名规则来实现的。
+
+在MyBatis中，Mapper接口是一个Java接口，它定义了一些方法，这些方法对应了Mapper XML文件中的SQL语句，Mapper XML文件中的SQL语句通过namespace属性与Mapper接口关联起来。Mapper XML文件中的namespace必须为接口的全路径名，Mapper接口的方法名和Mapper XML文件中定义的SQL语句的id属性值相同，这样就建立了Mapper接口和Mapper XML文件之间的对应关系。
+
+一般情况下会在MybatisBaseMapper中定义抽象出的基本操作
+
+```java
+package com.meituan.mdp.mybatis.mapper;
+
+public interface MybatisBaseMapper<T, E, PK extends Serializable> {
+    int insert(T record);
+    int insertSelective(T record);
+
+    int deleteByExample(E example);
+
+    int deleteByPrimaryKey(PK id);
+
+    int updateByExampleSelective(@Param("record") T record, @Param("example") E example);
+
+    int updateByExample(@Param("record") T record, @Param("example") E example);
+
+    int updateByPrimaryKeySelective(T record);
+
+    int updateByPrimaryKey(T record);
+
+    List<T> selectByExample(E example);
+
+    T selectByPrimaryKey(PK id);
+
+    long countByExample(E example);
+
+    List<T> selectByExampleWithRowbounds(E example, RowBounds rowBounds);
+}
+```
+
+然后我们可以在自定义的Mapper文件中添加方法，同时在Mapper XML文件中添加上指定的SQL语句。这一部分的工作可以通过MyBatisCodeHelperPro（Marketplace Edition）插件更快的完成
+
+第三，我们定义dao接口文件，如下：
+
+```java
+public interface FeatureLogicGroupDAOService {
+    int insert(FeatureLogicGroupDO record);    
+    int insertSelective(FeatureLogicGroupDO record);
+
+    FeatureLogicGroupDO selectByPrimaryKey(Long id);
+
+    int updateByPrimaryKeySelective(FeatureLogicGroupDO record);
+
+    int updateByPrimaryKey(FeatureLogicGroupDO record);
+
+    List<FeatureLogicGroupDO> selectAllByEntityCodeAndCreatorAndType(Long entityCode, String creator, Byte type);
+
+    List<FeatureLogicGroupDO> selectAllByTenantId(Long tenantId);
+}    
+```
+第四，我们定义dao接口的实现文件，即通过注入mapper来实现dao中的各种方法
+
+
+```java
+package com.sankuai.ddstgy.featuremanager.featuremanager.dao.service.impl;
+
+@Component
+public class FeatureLogicGroupDAOServiceImpl implements FeatureLogicGroupDAOService {
+    @Autowired
+    private FeatureLogicGroupDOMapper featureLogicGroupDOMapper;
+    @Override
+    public int insert(FeatureLogicGroupDO record) {
+        return featureLogicGroupDOMapper.insert(record);
+    }
+
+    @Override
+    public int insertSelective(FeatureLogicGroupDO record) {
+        return featureLogicGroupDOMapper.insertSelective(record);
+    }
+
+    @Override
+    public FeatureLogicGroupDO selectByPrimaryKey(Long id) {
+        return featureLogicGroupDOMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    public int updateByPrimaryKeySelective(FeatureLogicGroupDO record) {
+        return featureLogicGroupDOMapper.updateByPrimaryKeySelective(record);
+    }
+
+    @Override
+    public int updateByPrimaryKey(FeatureLogicGroupDO record) {
+        return featureLogicGroupDOMapper.updateByPrimaryKey(record);
+    }
+
+    @Override
+    public List<FeatureLogicGroupDO> selectAllByEntityCodeAndCreatorAndType(Long entityCode, String creator, Byte type) {
+        FeatureLogicGroupDOExample example = new FeatureLogicGroupDOExample();
+        FeatureLogicGroupDOExample.Criteria criteria = example.createCriteria();
+        if (null != entityCode) {
+            criteria.andEntityCodeEqualTo(entityCode);
+        }
+        if (null != creator) {
+            criteria.andCreatorEqualTo(creator);
+        }
+        if (null != type) {
+            criteria.andTypeEqualTo(type);
+        }
+
+        return featureLogicGroupDOMapper.selectByExampleWithBLOBs(example);
+    }
+
+    @Override
+    public List<FeatureLogicGroupDO> selectAllByTenantId(Long tenantId) {
+        FeatureLogicGroupDOExample example = new FeatureLogicGroupDOExample();
+        example.createCriteria()
+                .andTenantIdEqualTo(tenantId);
+        return featureLogicGroupDOMapper.selectByExampleWithBLOBs(example);
+    }
+}
+```
+
+从原理的角度来说，MyBatis将DAO与XML文件对应起来依赖于动态代理和XML解析。动态代理实现了DAO接口的代理对象，XML解析器解析Mapper XML文件并生成MappedStatement对象
+
+当我们使用MyBatis进行数据库操作时，实际上是通过MyBatis框架生成了一个DAO的代理对象，这个代理对象会拦截DAO接口中的方法调用，并将方法调用转化为对应的SQL语句执行。这个代理对象是通过Java的动态代理技术生成的，它实现了DAO接口，并在方法调用时调用MyBatis框架的API来执行对应的SQL语句。
+
+在MyBatis中，Mapper XML文件是通过XML解析器来解析的，MyBatis会将Mapper XML文件解析成一个个的MappedStatement对象，每格MappedStatement对象对应一个SQL语句。MappedStatement对象中包含了SQL语句的信息，例如SQL语句的类型、参数类型、返回值类型等。当DAO接口中的方法被调用时，MyBatis会根据方法名和参数类型等信息，找到对应的MappedStatement对象，并执行其中的SQL语句。
+
+
+
+### 模糊查询like语句该怎么写
+
+- '%${question}%' 可能会引起sql注入，不推荐
+
+- "%" + #{question} + "%" 注意：因为#{…}解析成sql语句时候，会在变量外侧自动加单引号' '，所以这里 % 需要使用双引号" "，不能使用单引号 ’ '，不然会查不到任何结果。
+
+- 使用concat()函数进行字符串拼接，将`%`和参数值拼接成一个字符串，然后使用`like`关键字进行模糊查询。`#{name}`表示参数，使用了`#{}`语法，表示参数是一个占位符，MyBatis会将其替换成一个问号(?)，然后使用预编译SQL语句进行执行，避免了SQL注入攻击的风险。
+
+  ```xml
+  <select id="getUserByName" resultType="User">
+    select * from user where name like concat('%', #{name}, '%')
+  </select>
+  ```
+
+- 使用bind标签，`<bind>`元素可以在SQL语句中定义一个变量，并将其赋值。它的作用是将一个表达式的值绑定到一个变量上，然后在SQL语句中使用该变量。需要注意的是，`<bind>`元素只能在`<select>`、`<insert>`、`<update>`和`<delete>`等元素的内部使用，不能在`<sql>`、`<include>`等元素中使用。另外，`<bind>`元素定义的变量只在当前SQL语句中有效，不能在其他SQL语句中使用。 
+
+  ```xml
+  <select id="getUserByName" resultType="User">
+    <bind name="likeName" value="'%' + name + '%'"/>
+    select * from user where name like #{likeName}
+  </select>
+  ```
+
+  
+
+### XML文件和MyBatis内部数据结构的关系
+
+MyBatis会将所有的XML配置信息都All-in-One封装到一个重量级的configuration对象中，在XML映射文件中，`<parameterMap>`标签会被解析成ParameterMap对象，其每个子元素会被解析为ParameterMapping对象。`<resultMap>`标签会被解析成resultMap对象，其每个子元素会被解析为ResultingMapping对象。每一个`<select>`、`<insert>`、`<update>`、`<delete>`标签均会被解析为MappedStatement对象，标签内的sql会被解析为BoundSql对象
+
+
+
+### MyBatis映射文件中，如果A标签通过include引用了B标签的内容，B标签是否可以定义在A标签的后面
+
+可以。虽然MyBatis解析XML文件是按照顺序进行的，但是被引用的B标签依然可以定义在任何地方。
+
+原理是，MyBatis解析A标签，发现了A标签引用了B标签，但是B标签尚未解析到，还不存在。此时，MyBatis会将A标签标记为未解析状态，然后继续解析余下的标签，包含B标签，待所有标签解析完毕，MyBatis会重新解析那些被标记为未解析的标签，此时再解析A标签，B标签已经存在了，A标签也就可以正常完成解析了。
 
 
 
