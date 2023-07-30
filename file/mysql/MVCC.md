@@ -91,6 +91,8 @@ mysql> SELECT @@tx_isolation;
 
 因为<font color=red>隔离级别越低，事务请求的锁越少，</font>所以大部分数据库系统的隔离级别都是 **READ-COMMITTED(读取提交内容)** ，但是你要知道的是 InnoDB 存储引擎默认使用 **REPEATABLE-READ（可重读）** 并不会有任何性能损失。
 
+> MyISAM没有隔离级别这个说法，因为它不支持事务
+
 **InnoDB存储引擎在分布式事务的情况下一般会用到SERIALIZABLE（串行化）隔离级别**
 
 > 分布式事务指的是允许多个独立的事务资源（transactional resources）参与到一个全局的事务中，事务资源通常是关系型数据库系统，但也可以是其他类型的资源，全局事务要求在其中的所有参与的事务要么都提交，要么都回滚，这对于事务原有的ACID又有了提高，另外在使用分布式事务的时候，InnoDB存储引擎的事务隔离级别必须设置为SERIALIZABLE
