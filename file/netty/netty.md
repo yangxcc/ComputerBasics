@@ -190,7 +190,7 @@ try {
 
 Netty采用了串行无锁化的设计，在IO线程内部进行串行设计避免了多线程竞争导致的性能下降，表面上看，串行化设计CPU利用率不高，并发程度不够，但是通过调整NIO线程池的线程参数，可以同时启动多个串行化的线程并行执行，这种局部无锁化的串行设计比一个队列-多个工作线程模型的性能更优
 
-<img src="../../image/mq/无锁化串行.png" style="zoom:80%;" />
+<img src="../../image/netty/无锁化串行.png" style="zoom:80%;" />
 
 Netty中的这种理念具体体现在：当NioEventLoop读取到消息之后，直接调用ChannelPipeline中的方法（fireChannelRead），只要用户不主动切换线程，一直会由NioEventLoop调用到用户的Handler，期间不进行线程切换，这种串行化方式避免了多线程操作导致的锁的竞争，从性能角度看是最优的
 

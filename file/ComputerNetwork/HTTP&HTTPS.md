@@ -59,7 +59,7 @@ HTTP全称是**H**yper**T**ext **T**ransfer **P**rotocol超文本传输协议，
 
 > host字段
 
-<img src="../../image/mq/image-20211110132054363.png" alt="image-20211110132054363" style="zoom:47%;" />
+<img src="../../image/ComputerNetwork/image-20211110132054363.png" alt="image-20211110132054363" style="zoom:47%;" />
 
 我们通过域名能够解析出IP地址，一台服务器上可以部署多个网站，因此host字段的作用就是**将请求发送到一台服务器上的不同网站**
 
@@ -67,7 +67,7 @@ HTTP全称是**H**yper**T**ext **T**ransfer **P**rotocol超文本传输协议，
 
 这个字段表示的是服务器本次响应返回的数据的长度
 
-<img src="../../image/mq/image-20211110132633232.png" alt="image-20211110132633232" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211110132633232.png" alt="image-20211110132633232" style="zoom:50%;" />
 
 **HTTP 协议通过设置回车符、换行符作为 HTTP header 的边界，通过 Content-Length 字段作为 HTTP body 的边界，这两个方式都是为了解决“粘包”的问题**。
 
@@ -77,7 +77,7 @@ HTTP全称是**H**yper**T**ext **T**ransfer **P**rotocol超文本传输协议，
 
 Connection字段最常应用于客户端要求服务器使用TCP的长连接，以便请求复用
 
-<img src="../../image/mq/image-20211110132746758.png" alt="image-20211110132746758" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211110132746758.png" alt="image-20211110132746758" style="zoom:50%;" />
 
 事实上，在HTTP/1.1中默认就是持久连接的，但是为了兼容新版本的HTTP，需要指定首部的`Connection`字段为`keep-alive`，这样一个可以复用的TCP连接就建立了，直到客户端或者服务端主动要求断开
 
@@ -85,7 +85,7 @@ Connection字段最常应用于客户端要求服务器使用TCP的长连接，�
 
 > Accept和Content-Type
 
-<img src="../../image/mq/image-20211110132959397.png" alt="image-20211110132959397" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211110132959397.png" alt="image-20211110132959397" style="zoom:50%;" />
 
 `Accept`表示客户端告诉服务器自己能够接受的数据格式
 
@@ -95,7 +95,7 @@ Connection字段最常应用于客户端要求服务器使用TCP的长连接，�
 
 > Accept-Encoding和Content-Encoding
 
-<img src="../../image/mq/image-20211110133220937.png" alt="image-20211110133220937" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211110133220937.png" alt="image-20211110133220937" style="zoom:50%;" />
 
 `Accept-Encoding`表示的是客户端告诉服务端自己能够接受怎样的压缩方式
 
@@ -197,7 +197,7 @@ HTTP最突出的优点就是简单、灵活和易于扩展、应用广泛和跨�
 
 - 首先是无状态，无状态的好处是因为浏览器不会去记忆HTTP的状态，这样能够节省资源，使得CPU能够更好地去服务请求，而无状态的坏处在于当进行一些关联操作的时候比较麻烦，比如再进行网上购物时，流程通常是`登录 -> 添加购物车 -> 下单 -> 结算 -> 支付`每一个过程需要验证用户的身份信息，这显然会带来很差的用户体验，对于HTTP无状态的解决方式通常是可以使用Cookie技术，Cookie技术通过在请求和响应报文中写入Cookie信息来控制客户端的状态
 
-  <img src="../../image/mq/image-20211110133220938.png" style="zoom:60%;" />
+  <img src="../../image/ComputerNetwork/image-20211110133220938.png" style="zoom:60%;" />
 
 - 其次是明文传输，明文传输意味着应用数据在传输过程中是易于阅读的，通过浏览器的F12和其他的抓包软件都可以直接看到，方便调试，也正是由于这个特性，HTTP是不安全的，这相当于应用信息在网络中裸奔
 
@@ -219,17 +219,17 @@ HTTP协议是基于**TCP/IP**协议的，并且是基于**请求-应答**的模�
 
   > 长连接（持久连接）的特点是，只要任意一端没有明确提出断开连接，则保持TCP连接状态，当然，如果某个 HTTP 长连接超过一定时间没有任何数据交互，服务端就会主动断开这个连接。
 
-  <img src="../../image/mq/image-20211110143453226.png" alt="image-20211110143453226" style="zoom:67%;" />
+  <img src="../../image/ComputerNetwork/image-20211110143453226.png" alt="image-20211110143453226" style="zoom:67%;" />
 
   
 
 - **第二是管道网络传输**，因为HTTP/1.1能够开启长连接，这也使得管道网络传输成为可能，即在同一个TCP连接中客户端发送多个请求，即第一个请求发送出去之后，不需要等待这个请求的响应，第二个请求也可以马上发出去，这样的做法能够减少整体的响应时间
 
-  <img src="../../image/mq/image-20211110143717149.png" alt="image-20211110143717149" style="zoom:50%;" />
+  <img src="../../image/ComputerNetwork/image-20211110143717149.png" alt="image-20211110143717149" style="zoom:50%;" />
 
   但是服务端是按照先后顺序来处理请求的（**服务器必须按照接收请求的顺序发送对这些管道化请求的响应**），如果前面的请求特别慢，那么后面的请求只能等着，所以HTTP/1.1中存在**队头阻塞问题**，如下图：
 
-  <img src="../../image/mq/image-20211110143922275.png" alt="image-20211110143922275" style="zoom:50%;" />
+  <img src="../../image/ComputerNetwork/image-20211110143922275.png" alt="image-20211110143922275" style="zoom:50%;" />
 
 也就是说，**HTTP/1.1解决了请求的队头阻塞问题，但是没有解决响应的队头阻塞问题**
 
@@ -282,7 +282,7 @@ HTTP协议是基于**TCP/IP**协议的，并且是基于**请求-应答**的模�
 
 - **二进制帧，**HTTP/2不再像HTTP/1.1那样传输的是纯文本的明文格式了，而是全面采用二进制格式，头和body都是二进制，统称为帧：头信息帧和数据帧，使用二进制虽然对人不友好，但是计算机处理起来是更快的
 
-  <img src="../../image/mq/image-20211110153316720.png" alt="image-20211110153316720" style="zoom:50%;" />
+  <img src="../../image/ComputerNetwork/image-20211110153316720.png" alt="image-20211110153316720" style="zoom:50%;" />
 
 - **数据流，**HTTP/2中的请求不是按照顺序发送的，所以同一个连接里面相邻的数据包可能是属于不同的请求响应，因此要对每个数据包进行编号，指出它是属于哪个请求/响应 ，每个请求/响应的所有数据包统称为一个数据流，每个数据流都有着自己独一无二的编号，其中规定
 
@@ -301,7 +301,7 @@ HTTP/2的主要问题在于多个请求复用一个TCP连接，而下层的TCP�
 - HTTPS要建立一次连接，需要花费6次交互，先是建立TCP三次握手，然后是TLS1.3三次握手（TLS1.2是4次握手），QUIC协议直接把以往的TCP和TLS1.3的6次交互合并成了3次，减少了交互次数
 - 连接迁移，基于 TCP 传输协议的 HTTP 协议，由于是通过四元组（源 IP、源端口、目的 IP、目的端口）确定一条 TCP 连接，那么**当移动设备的网络从 4G 切换到 WIFI 时，意味着 IP 地址变化了，那么就必须要断开连接，然后重新建立连接**。而 QUIC 协议没有用四元组的方式来“绑定”连接，而是通过**连接 ID** 来标记通信的两个端点，客户端和服务器可以各自选择一组 ID 来标记自己，因此即使移动设备的网络变化后，导致 IP 地址变化了，只要仍保有上下文信息（比如连接 ID、TLS 密钥等），就可以“无缝”地复用原连接，消除重连的成本，没有丝毫卡顿感，达到了**连接迁移**的功能。
 
-<img src="../../image/mq/image-20211110154652754.png" alt="image-20211110154652754" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211110154652754.png" alt="image-20211110154652754" style="zoom:67%;" />
 
 所以，QUIC协议是一个基于UDP的伪TCP+TLS+HTTP/2的多路复用协议，QUCI是新协议，有很多设备不知道什么是QUIC，只会把他当成UDP，所以可能会产生一些问题，目前HTTP/3还未普及
 
@@ -317,7 +317,7 @@ HTTP/2的主要问题在于多个请求复用一个TCP连接，而下层的TCP�
 
 怎么能够避免发送HTTP请求呢？答案是通过**缓存**，对于一些重复的HTTP请求，其响应是一样的，那么我们可以把`请求url-响应`看作是`key-value`缓存到本地，当发送HTTP请求之前，现在本地缓存中查找一下，如果能够找到，那么就不用再发送请求了
 
-<img src="../../image/mq/image-20211112144911496.png" alt="image-20211112144911496" style="zoom:80%;" />
+<img src="../../image/ComputerNetwork/image-20211112144911496.png" alt="image-20211112144911496" style="zoom:80%;" />
 
 但是上面的缓存存在一个问题：如果服务器上的资源发生了变化，而请求并没有到达服务器，这样就会造成请求的数据和服务器上现在的数据不一致，那么怎么解决这个问题的？答案是给响应设置一个**过期时间**，具体流程为：
 
@@ -326,7 +326,7 @@ HTTP/2的主要问题在于多个请求复用一个TCP连接，而下层的TCP�
   - 如果没有超过过期时间，那么客户端不用在向服务器发送请求，直接使用缓存中的数据就好了
   - 如果超过了过期时间，那么客户端需要向服务端再次发送请求，在请求的头部带上本地缓存中响应数据的摘要`Etag`，这个摘要是本地缓存中数据的唯一标识，服务端收到请求之后，会把自己将要发送的数据和本地缓存中的数据进行比较，如果没有发生变化，那么服务器**仅返回不含有包体的 `304 Not Modified` 响应**，告诉客户端仍然有效，这样就可以减少响应资源在网络中传输的延时，而如果发生了变化，则返回的响应中需要携带上最新的数据
 
-<img src="../../image/mq/image-20211112150117208.png" alt="image-20211112150117208" style="zoom:80%;" />
+<img src="../../image/ComputerNetwork/image-20211112150117208.png" alt="image-20211112150117208" style="zoom:80%;" />
 
 
 
@@ -338,17 +338,17 @@ HTTP/2的主要问题在于多个请求复用一个TCP连接，而下层的TCP�
 
 服务器上的资源可能由于维护、迁移等原因由url1变成了url2，但是客户端并不知道这种改动，而当客户端通过url1访问时，服务端不能够仅仅简单地返回404，而是应该返回302（临时重定向）和Location头部，告诉客户端服务器的资源已经迁移至url2，于是客户端需要向url2发送请求以获得服务器资源，如下图：
 
-<img src="../../image/mq/image-20211112151109064.png" alt="image-20211112151109064" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211112151109064.png" alt="image-20211112151109064" style="zoom:50%;" />
 
 而且客户端和服务端之间往往不是直接相连，中间会存在一台或者多台代理服务器，因此重定向的次数越多，客户端发送的请求次数就越多，越会加重网络的负担
 
 如果代理服务器能够完成重定向的工作，就可以减少HTTP重定向的请求次数了
 
-<img src="../../image/mq/image-20211112151629995.png" alt="image-20211112151629995" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211112151629995.png" alt="image-20211112151629995" style="zoom:50%;" />
 
 如果代理服务器知道了重定向的规则，那么就能够进一步减少重定向的请求次数了
 
-<img src="../../image/mq/image-20211112151716014.png" alt="image-20211112151716014" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211112151716014.png" alt="image-20211112151716014" style="zoom:50%;" />
 
 如果在重定向过程中返回的是301状态码，那么客户端可以想重定向的结果缓存到本地，以后直接通过发送url2就可以了
 
@@ -358,7 +358,7 @@ HTTP/2的主要问题在于多个请求复用一个TCP连接，而下层的TCP�
 
 把多个小请求合并成一个大请求，虽然传输的总资源没有发生变化，但是将多个小请求合并成一个大请求，会**减少发送重复的请求头部**
 
-另外，如果是HTTP/1.1，因为他是请求-响应模式，如果一个请求迟迟未得到响应，那么后面的请求就发不出去（队头阻塞），所以在HTTP/1.1中，为了防止单个请求的阻塞，浏览器一般会同时发送`5~6`个请求，每一个请求都是不同的TCP连接，那么如果合并了请求，也就是会减少TCP连接的数量，也较少了TCO连接握手和慢启动过程的耗时
+另外，如果是HTTP/1.1，因为他是请求-响应模式，如果一个请求迟迟未得到响应，那么后面的请求就发不出去（队头阻塞），所以在HTTP/1.1中，为了防止单个请求的阻塞，浏览器一般会同时发送`5~6`个请求，每一个请求都是不同的TCP连接，那么如果合并了请求，也就是会减少TCP连接的数量，也较少了TCP连接握手和慢启动过程的耗时
 
 **合并请求的方式就是合并资源，以一个大资源的请求代替多个小资源的请求，但是这样的合并请求会带来新的问题，如果大资源中的小资源发生了变化，客户端必须重新下载整个的大资源**
 
@@ -428,7 +428,7 @@ HTTP/2中没有使用常见的`gzip`等压缩方式来对头部进行压缩，�
 
 **HTTP/2为频繁出现在头部的字符串和字段建立了一张静态表，共61个，他是被写入到了HTTP/2的框架中的，不会发生变化，**如下图：
 
-<img src="../../image/mq/image-20211115161235582.png" alt="image-20211115161235582" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115161235582.png" alt="image-20211115161235582" style="zoom:67%;" />
 
 表中的`Index`表示索引，`Header Value`表示索引对应的`Value`，`Header Name`表示的是字段的名称，比如`index`为2代表着GET，index为8代表着状态码200
 
@@ -444,13 +444,13 @@ server: nghttpx\r\n # 共有17个字节， \r是一个字节
 
 根据RFC7541规范，<font color=red>如果字段在静态表中，并且value是变化的，那么它的HTTP/2头部前两位是`01`，</font>所以对于某个字段在头部中的格式如下：
 
-<img src="../../image/mq/image-20211115162430630.png" alt="image-20211115162430630" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211115162430630.png" alt="image-20211115162430630" style="zoom:50%;" />
 
 由于HTTP/2是使用二进制编码，所以不再需要`\r\n`来分割字符串了，改用字符串的长度`value length`来分割index和value
 
 还是上面`server:nghttp\r\n`，通过抓包可以发现它的二进制编码如下：
 
-<img src="../../image/mq/image-20211115161754436.png" alt="image-20211115161754436" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115161754436.png" alt="image-20211115161754436" style="zoom:67%;" />
 
 - 首先看红色部分，因为server是在静态表中，而且它的value值是变化的，所以前两位是`01`，又因为`server`在静态表中的编号是54，对应的二进制是110110，所以红色部分就是01110110
 - 然后第二个字节的第一个比特位表示的是是否经过了Huffman编码，1表示经过了Huffman编码，后面的7位表示数据（value）的长度，比如上图中第二个字节为`10000110`，第一个1表示经过了Huffman编码，后面的`0000110`表示value的长度为6
@@ -458,9 +458,9 @@ server: nghttpx\r\n # 共有17个字节， \r是一个字节
 
 于是，**在统计大量的 HTTP 头部后，HTTP/2 根据出现频率将 ASCII 码编码成了 Huffman 编码表，**可以 在 RFC7541 文档找到这张静态 Huffman 表，通过查表后，字符串`nghttpx`的Huffman编码在下图看到，共有6个字节，每⼀个字符的 Huffman 编码，我用相同的颜色将他们对应起来了，最后的 7 位是补位的。
 
-<img src="../../image/mq/image-20211115164025367.png" alt="image-20211115164025367" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115164025367.png" alt="image-20211115164025367" style="zoom:67%;" />
 
-<img src="../../image/mq/image-20211115164058737.png" alt="image-20211115164058737" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115164058737.png" alt="image-20211115164058737" style="zoom:67%;" />
 
 所以说，在HTTP/2中报文的头部就是由上面这种格式的二进制数据组成的
 
@@ -486,11 +486,11 @@ HTTP/2将HTTP/1.1中的文本传输格式转化成了二进制格式传输数据
 
 HTTP/2把响应报文划分成了两个帧（Frame），图中的HEADERS首部和DATA（消息负载）是帧的类型，也就是说**一条HTTP报文，划分成了两个帧来传输，并且采用二进制编码**
 
-<img src="../../image/mq/image-20211115171602705.png" alt="image-20211115171602705" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115171602705.png" alt="image-20211115171602705" style="zoom:67%;" />
 
 > **<font color=red size=4pt>HTTP/2二进制帧的结构</font>**
 
-<img src="../../image/mq/image-20211115171859636.png" alt="image-20211115171859636" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115171859636.png" alt="image-20211115171859636" style="zoom:67%;" />
 
 可以看到，HTTP/2的二进制帧的帧头很小，一共才9个字节：
 
@@ -498,7 +498,7 @@ HTTP/2把响应报文划分成了两个帧（Frame），图中的HEADERS首部�
 
 - 帧长度后面的一个字节用来表示帧的类型，HTTP/2共定义了10中不同类型的帧，一般分为数据帧和控制帧，如下
 
-  <img src="../../image/mq/image-20211115172108327.png" alt="image-20211115172108327" style="zoom:80%;" />
+  <img src="../../image/ComputerNetwork/image-20211115172108327.png" alt="image-20211115172108327" style="zoom:80%;" />
 
   > 从数据帧里面的类型中也可以看出，HTTP报文的header和body是通过不同的帧分开传输的
 
@@ -521,14 +521,14 @@ HTTP/2把响应报文划分成了两个帧（Frame），图中的HEADERS首部�
 
 HTTP/2中通过Stream解决了HTTP/1.1中的队头阻塞，**多个Stream复用一个TCP连接**，达到并发的效果，提高了系统的吞吐量
 
-<img src="../../image/mq/image-20211115174734527.png" alt="image-20211115174734527" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211115174734527.png" alt="image-20211115174734527" style="zoom:67%;" />
 
 > 图中 `Stream` 表示多个数据流，它们可以源源不断地并发传送，同一个 `Stream` 流中的 `frame` 数据是串行发送的。 
 
 从上图中可以看出：
 
 - 一个TCP连接中可以有一个或者多个Stream，Stream是HTTP/2能够并发请求的关键技术
-- Stream里可以包含一个或者多个message，Message对应的是HTTP/1.1中的请求/响应，由HTTP头部和包体构成
+- Stream里可以包含一个或者多个message，Message对应的是HTTP/1.1中的请求/响应包，由HTTP头部和包体构成
 - Message里面包含一个或者多个frame，frame是HTTP/2中最基本的传输单位，以二进制压缩格式存放HTTP报文的header和body
 
 因此，我们可以得到一个结论：**多个Stream跑在一条TCP连接中，同一个HTTP请求和响应是跑在同一个Stream中，HTTP消息可以由多个Frame构成，一个Frame可以由多个HTTP报文构成。**
@@ -545,7 +545,7 @@ HTTP/2中通过Stream解决了HTTP/1.1中的队头阻塞，**多个Stream复用�
 
 HTTP/2同样还可以对每个Stream设置不同的优先级，帧头中的标志位可以设置优先级，比如客户端访问HTML/CSS 和图片资源时，希望服务器先传递 HTML/CSS，再传图片，那么就可以通过设置 Stream 的优先级来实现，以此提高用户体验。
 
-<img src="../../image/mq/image-20211116084028107.png" alt="image-20211116084028107" style="zoom:80%;" />
+<img src="../../image/ComputerNetwork/image-20211116084028107.png" alt="image-20211116084028107" style="zoom:80%;" />
 
 #### 服务器主动推送
 
@@ -553,7 +553,7 @@ HTTP/2同样还可以对每个Stream设置不同的优先级，帧头中的标�
 
 比如。客户端通过HTTP/1.1请求从服务器那里获取到了HTML文件，而HTML文件可能还需要CSS文件来渲染页面，这是客户端还要再发起CSS文件的请求，需要两次消息往返，如下图中的左部分：
 
-<img src="../../image/mq/image-20211116084908944.png" alt="image-20211116084908944" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211116084908944.png" alt="image-20211116084908944" style="zoom:67%;" />
 
 如上图中的右部分，在HTTP/2中，客户端在访问HTML时，服务器可以主动推送CSS文件，减少了消息传递的次数
 
@@ -571,7 +571,7 @@ location /test.html {
 
 我们知道，客户端发送请求时，使用的Stream ID必须是奇数，服务器主动推送发送的Stream ID必须是偶数，在服务器推送资源的时候，会通过`PUSH_PROMISE`帧传输HTTP头部，并通过帧中的`Promised Stream ID`字段告知客户端，接下来会在哪个Stream中发送包体
 
-<img src="../../image/mq/6b2804147e712bd0c81d879a4fff807b.png" alt="img" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/6b2804147e712bd0c81d879a4fff807b.png" alt="img" style="zoom:67%;" />
 
 值得注意的是：服务器在Stream1中通知客户端CSS资源即将到来，然后在Stream2中发送CSS资源，**Stream1和Stream2可以并发**
 
@@ -663,6 +663,8 @@ HTTP/3基于QUIC协议，从HTTP协议的本身，HTTP/3中也做出了一些修
 
 - 首先，HTTP/3和HTTP/2一样采用二进制的结构，不同的地方在于HTTP/2的二进制帧中需要定义Stream，而HTTP/3本身不再需要定义Stream，直接使用QUIC协议中的Stream，于是HTTP/3中的帧结构也变简单了：帧头只有两个字段，类型和长度；根据帧类型的不同，大体上分为数据帧和控制帧两大类，Headers 帧（HTTP 头部）和 DATA 帧（HTTP 包体）属于数据帧。
 
+  > Stream ID被移动到QUIC协议中的QUIC HEADER中存储
+
 ![](../../image/ComputerNetwork/HTTP3报头.PNG)
 
 - HTTP/3在头部压缩算法这一方面也进行了升级，从HPACK升级成了QPACK，与HPACK类似，QPACK也采用了静态表、动态表、Huffman编码的方式来做头部压缩，不同的是，静态表的大小从HPACK中的61项扩大到了QPACK中的91项。
@@ -701,7 +703,7 @@ HTTP/3基于QUIC协议，从HTTP协议的本身，HTTP/3中也做出了一些修
 
 那么HTTPS就是通过在HTTP和TCP之间加入了SSL/TLS层解决了上面的三个安全问题
 
-<img src="../../image/mq/image-20211110144603893.png" alt="image-20211110144603893" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211110144603893.png" alt="image-20211110144603893" style="zoom:67%;" />
 
 那么HTTPS是如何通过加了一层SSL/TLS解决了上面的三个风险的呢？
 
@@ -727,7 +729,7 @@ HTTP/3基于QUIC协议，从HTTP协议的本身，HTTP/3中也做出了一些修
   >
   > 如何保证服务端的公钥的信任度和不被篡改呢？这里就需要借助第三方的权威认证机构CA（数字认证中心），将服务器公钥放在数字证书（由CA颁发）中，只要证书是可信的，公钥就是可信的
   >
-  > <img src="../../image/mq/image-20211110150227285.png" alt="image-20211110150227285" style="zoom:67%;" />
+  > <img src="../../image/ComputerNetwork/image-20211110150227285.png" alt="image-20211110150227285" style="zoom:67%;" />
 
  
 
@@ -764,7 +766,7 @@ TLS记录协议主要负责消息（HTTP数据）的压缩，加密以及数据�
 
 ### HTTPS一定安全可靠吗
 
-客户端通过浏览器向服务端服务端发起HTTPS请求时，被假基站转发到了一个中间人服务器，于是客户端是和中间人服务器完成了TLS握手，然后这个中间人服务器在于真正的服务器完成TLS握手
+客户端通过浏览器向服务端发起HTTPS请求时，被假基站转发到了一个中间人服务器，于是客户端是和中间人服务器完成了TLS握手，然后这个中间人服务器在于真正的服务器完成TLS握手
 
 ![](../../image/ComputerNetwork/https中间人攻击.webp)
 
@@ -782,13 +784,13 @@ TLS记录协议主要负责消息（HTTP数据）的压缩，加密以及数据�
 
 所以，**这其实并不能说 HTTPS 不够安全，毕竟浏览器都已经提示证书有问题了，如果用户坚决要访问，那不能怪 HTTPS** 
 
-另外，还有一种情况那就是电脑被病毒植入了中间人服务器的根证书，那么在验证中间人服务器的时候，由于操作系统是新人中间人服务器的根证书的，那么就等同于中间人是可信的，这种情况下是不会弹出风险提醒的。这其实也是不关HTTPS的事情的。
+另外，还有一种情况那就是电脑被病毒植入了中间人服务器的根证书，那么在验证中间人服务器的时候，由于操作系统是信任中间人服务器的根证书的，那么就等同于中间人是可信的，这种情况下是不会弹出风险提醒的。这其实也是不关HTTPS的事情的。
 
 所以，HTTPS协议本身到目前为止还是没有任何漏洞的，即使成功进行了中间人攻击，本质上也是利用了客户端的漏洞（信任了危险证书或者是被恶意植入伪造的根证书），并不是HTTPS本身不够安全
 
 HTTPS相较于HTTP就是多了一层`SSL/TLS`层，如下图
 
-<img src="../../image/mq/image-20211112155105315.png" alt="image-20211112155105315" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211112155105315.png" alt="image-20211112155105315" style="zoom:50%;" />
 
 HTTPS就是通过`SSL/TLS`这一层解决了HTTP中存在的三个问题：窃听风险、假冒风险、篡改风险，而且HTTP在TCP三次握手之后就能够开始进行明文通信了，而HTTPS需要在TCP三次握手之后，在等`SSL/TLS`握手之后才能够进行加密通信
 
@@ -798,7 +800,7 @@ HTTPS就是通过`SSL/TLS`这一层解决了HTTP中存在的三个问题：窃�
 
 接下来，来看一下`SSL/TLS`的握手过程
 
-![image-20211112195544822](../../image/mq/image-20211112195544822.png)
+![image-20211112195544822](../../image/ComputerNetwork/image-20211112195544822.png)
 
 上图简要概述了TLS握手的过程，每一个框都表示一条记录（record），类似于TCP中的`segment`，**记录是TLS收发数据的基本单位**，多个记录可以组成一个TCP包发送，所以通常需要经过四次TLS握手，2个RTT的时延，然后就能够在安全的通信环境里面进行加密通信了
 
@@ -812,15 +814,15 @@ TLS握手的具体过程
 
   客户端发送`ClientHello`，具体包含**客户端使用的TLS版本号**，**客户端支持的密码套件列表**以及**客户端产生的一个随机数`Client-Random`**，将这些信息发送到服务器，上面的这个随机数将会被服务端保留，用于后面的会话密钥制作
 
-  ![image-20211112200821423](../../image/mq/image-20211112200821423.png)
+  ![image-20211112200821423](../../image/ComputerNetwork/image-20211112200821423.png)
 
 - **<font color=red>第二次握手</font>**
 
-  第二次握手的过程比较多，可以分为`ServerHello`，`Certificate`，`ServerHelloDone`四个子流程
+  第二次握手的过程比较多，可以分为`ServerHello`，`Certificate`，`ServerHelloDone`三个子流程
 
   - 首先是`ServerHello`，这一个过程中服务器会根据客户端发送过来的信息进行处理，首先确认TLS的版本，看看自己是否支持，然后他也会产生一个随机数`Server-Random`，最后他会在客户端支持的密码套件列表中选择出一个密码套件用于后续工作
 
-    <img src="../../image/mq/image-20211112201209917.png" alt="image-20211112201209917" style="zoom:67%;" />
+    <img src="../../image/ComputerNetwork/image-20211112201209917.png" alt="image-20211112201209917" style="zoom:67%;" />
 
     基本的形式是「**密钥交换算法 + 签名算法 + 对称加密算法 + 摘要算法**」， 一般 WITH 单词前面有两个单词，第一个单词是约定密钥交换的算法，第二个单词是约定证书的验证算法。比如刚才的密码套件的意思就是：
 
@@ -832,7 +834,7 @@ TLS握手的具体过程
 
   - 然后为了证明自己的身份，会发送`Server Certificate`给客户端，这个消息里面含有数字证书。
 
-    ![image-20211112201443366](../../image/mq/image-20211112201443366.png)
+    ![image-20211112201443366](../../image/ComputerNetwork/image-20211112201443366.png)
 
   - 随后，服务器会发送`Server Hello Done`，表示服务器将应该发送给客户端的数据都发送过去了，第二次握手结束
 
@@ -852,7 +854,7 @@ TLS握手的具体过程
     
     > 之所以要签名，是因为签名的作用可以避免中间人在获取证书时对证书内容的篡改
     
-    <img src="../../image/mq/image-20211112202214144.png" alt="image-20211112202214144" style="zoom:80%;" />
+    <img src="../../image/ComputerNetwork/image-20211112202214144.png" alt="image-20211112202214144" style="zoom:80%;" />
     
     CA 签发证书的过程，如上图左边部分：
     
@@ -892,7 +894,7 @@ TLS握手的具体过程
 
   **第三次握手发生在客户端校验完成服务器数字证书之后**，紧接着客户端会产生另外一个新的随机数，叫做`pre-master`，接着用服务器的RSA公钥加密这个随机数，通过`Client Key Exchange`这条记录将这个随机数发送给服务端
 
-  ![image-20211112204038544](../../image/mq/image-20211112204038544.png)
+  ![image-20211112204038544](../../image/ComputerNetwork/image-20211112204038544.png)
 
   服务器收到之后，会使用RSA私钥解密这个随机数
 
@@ -900,11 +902,11 @@ TLS握手的具体过程
 
   生成完会话密钥之后，客户端又会产生一个记录，名为`change Ciper Spec`，**通知服务端后续将使用上面的会话密钥进行通信了**
 
-  <img src="../../image/mq/image-20211112204946130.png" alt="image-20211112204946130" style="zoom:67%;" />
+  <img src="../../image/ComputerNetwork/image-20211112204946130.png" alt="image-20211112204946130" style="zoom:67%;" />
 
   最后客户端会发一个`Encrypted Handshake Message`消息，把之前发过去的全部信息做个摘要，在**使用会话密钥加密**一下，让服务器做个验证，验证加密通信是否可用和之前的握手信息是否有被中途篡改过。
 
-  <img src="../../image/mq/image-20211112205125584.png" alt="image-20211112205125584" style="zoom:67%;" />
+  <img src="../../image/ComputerNetwork/image-20211112205125584.png" alt="image-20211112205125584" style="zoom:67%;" />
 
 - **<font color=red>第四次握手</font>**
 
@@ -922,7 +924,7 @@ TLS握手的具体过程
 
 为了解决上述问题就有了DH密钥交换算法，流程如下：
 
-<img src="../../image/mq/image-20211113094745271.png" alt="image-20211113094745271" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211113094745271.png" alt="image-20211113094745271" style="zoom:67%;" />
 
 DH算法中密钥的交换方式如下
 
@@ -970,7 +972,7 @@ A和B也是公开的，因为根据离散对数的原理，从真数AB反向计�
 
 - **第一次握手：**和RSA算法一样，第一次握手还是`Client Hello`，向服务器发送自己的TLS版本，生成的一个随机数（client-random）以及支持的密码套件列表
 
-  <img src="../../image/mq/image-20211113100849575.png" alt="image-20211113100849575" style="zoom:60%;" />
+  <img src="../../image/ComputerNetwork/image-20211113100849575.png" alt="image-20211113100849575" style="zoom:60%;" />
 
   
 
@@ -978,11 +980,11 @@ A和B也是公开的，因为根据离散对数的原理，从真数AB反向计�
 
   - 服务器收到客户端的 Client Hello 之后需要进行回复，返回 Server Hello 消 息，消息里面有服务器确认的TLS版本，也会随即给出一个随机数（Server Random），然后从客户端的密码套件列表中选择一个合适的密码套件
 
-    <img src="../../image/mq/image-20211113101059953.png" alt="image-20211113101059953" style="zoom:60%;" />
+    <img src="../../image/ComputerNetwork/image-20211113101059953.png" alt="image-20211113101059953" style="zoom:60%;" />
 
   - 接着服务器端为了证明自己的身份，发送`certificate`消息，会把证书也发给客户端
 
-    <img src="../../image/mq/image-20211113101219780.png" alt="image-20211113101219780" style="zoom:67%;" />
+    <img src="../../image/ComputerNetwork/image-20211113101219780.png" alt="image-20211113101219780" style="zoom:67%;" />
 
   - 如果是在RSA中，接下来就是发送`Server Hello Done`了，但是使用EDCHE密钥交换算法，**在`Server Hello Done`前面还有一步就是`Server Key Exchange`，这个过程服务器做了三件事情**
 
@@ -990,13 +992,13 @@ A和B也是公开的，因为根据离散对数的原理，从真数AB反向计�
     - 第二件事情：生成一个随机数作为服务器端的椭圆曲线的私钥，保存在服务器本地
     - 第三件事情：根据上面的椭圆曲线和基点G算出私钥对应的公钥，将这个公钥发送给客户端
 
-    <img src="../../image/mq/image-20211113101451857.png" alt="image-20211113101451857" style="zoom:67%;" />
+    <img src="../../image/ComputerNetwork/image-20211113101451857.png" alt="image-20211113101451857" style="zoom:67%;" />
 
     同时，为了保证发送给客户端的公钥不被篡改，ECDHE算法中还使用了RSA算法对其进行加密，以便进行完整性校验
 
     至此，使用ECDHE密钥协商算法的第二次握手就结束了，服务器发送`Server Hello Done`，表示自己想要发送的数据都给客户端了，打招呼完毕
 
-    <img src="../../image/mq/image-20211113102159051.png" alt="image-20211113102159051" style="zoom:67%;" />
+    <img src="../../image/ComputerNetwork/image-20211113102159051.png" alt="image-20211113102159051" style="zoom:67%;" />
 
     
 
@@ -1006,7 +1008,7 @@ A和B也是公开的，因为根据离散对数的原理，从真数AB反向计�
 
   随后，客户端会产生一个随机数来作为自己的私钥，然后通过选出来的椭圆曲线和基点G计算出一个公钥，把这个公钥发送给服务器，这一部分叫做`Client key Exchange`
 
-  <img src="../../image/mq/image-20211113103700290.png" alt="image-20211113103700290" style="zoom:67%;" />
+  <img src="../../image/ComputerNetwork/image-20211113103700290.png" alt="image-20211113103700290" style="zoom:67%;" />
 
   ```shell
   # 至此，客户端和服务器共享的数据有：client-random,server-random,分别使用椭圆曲线计算出来的公钥，椭圆曲线，基点G，于是双方会根据`对方的椭圆曲线公钥 + 自己的椭圆曲线私钥 + 基点G`计算出一个密钥（记作x），在ECDHE算法原理中，计算出来的这个密钥就被作为最后的密钥了，但是在实际应用中，这个密钥并不会被作为最终的密钥，因为TLS设计者并不信任客户端和服务器端伪随机数的可靠性，所以最后的会话密钥是`client-random + server-random + x`，这样做虽然也保证不了完全的随机，但是三个伪随机数的组合，随机程度也就很高了
@@ -1016,7 +1018,7 @@ A和B也是公开的，因为根据离散对数的原理，从真数AB反向计�
 
   接着，客户端会发 「Encrypted Handshake Message」 消息，把之前发送的数据做⼀个摘要，再 用对称密钥加密 ⼀下，让服务端做个验证，验证下本次生成的对称密钥是否可以正常使用
 
-  <img src="../../image/mq/image-20211113104647134.png" alt="image-20211113104647134" style="zoom:67%;" />
+  <img src="../../image/ComputerNetwork/image-20211113104647134.png" alt="image-20211113104647134" style="zoom:67%;" />
 
 - **TLS第四次握手，**最后服务端也会进行相同的操作 change ciper spec 和 encrypted handshake message 消息，如果双方都验证加密和解密没有问题，那么握手完成，于是就可以正常收发加密的 HTTP请求和响应了
 
@@ -1030,7 +1032,7 @@ A和B也是公开的，因为根据离散对数的原理，从真数AB反向计�
 
 - 使用了RSA密钥协商算法，TLS完成四次握手之后才可以进行应用数据加密传输，而**对于ECDHE算法，客户端可以不用等服务端最后一次TLS握手，就可以提前发出加密的HTTP数据，**节省了一个消息的往返时间
 
-  <img src="../../image/mq/image-20211113110911096.png" alt="image-20211113110911096" style="zoom:80%;" />
+  <img src="../../image/ComputerNetwork/image-20211113110911096.png" alt="image-20211113110911096" style="zoom:80%;" />
 
 所以，**ECDHE算法相对于RSA算法的握手过程省去了一个消息往返的时间，这个有点抢跑的意思，它被称作是`TLS FALSE START`，**类似于`TCP FAST OPEN`，都是在连接还没有完全建立之前，就发送了应用数据，这样便提高了数据的传输效率
 
@@ -1096,7 +1098,7 @@ sort -u /proc/crypto |grep module |grep aes
 
 #### TLS协议升级
 
-<img src="../../image/mq/image-20211114171559585.png" alt="image-20211114171559585" style="zoom:67%;" />
+<img src="../../image/ComputerNetwork/image-20211114171559585.png" alt="image-20211114171559585" style="zoom:67%;" />
 
 可以看到，TLS需要经过4次握手，2RTT才能够进行加密通信，先要通过 Client Hello 和 Server Hello 两次握手交换双方产生的随机数以及协商出后续使用的加密算法，再互相交换公钥（客户端产生的第三个随机数），最后计算出通信需要的会话密钥
 
@@ -1177,13 +1179,13 @@ TLS握手的目的就是协商出后面通信使用的对称密钥，所以如�
 
 - **pre-shared key**，无论是Session id还是Session Ticket，都需要1RTT才能够恢复通信，但是在TLS1.3中出现的pre-shared需要0RTT就能够恢复会话，实际上，它的原理和Session Ticket类似，只是在客户端向服务器发送握手消息时，除了带上Session Ticket还会携带上请求，如下图：
 
-  <img src="../../image/mq/image-20211114180957433.png" alt="image-20211114180957433" style="zoom:50%;" />
+  <img src="../../image/ComputerNetwork/image-20211114180957433.png" alt="image-20211114180957433" style="zoom:50%;" />
 
 > 需要注意的是，Session id、Session Ticket、pre-shared key都**不具备前向安全性**，因为一旦加密会话密钥被破解或者服务器泄露会话密钥，前面劫持的通信密文都会被破解同时，Session id、Session Ticket、pre-shared key应对**重放攻击**也很困难
 
 **<font color=green size=4pt>什么是重放攻击呢？</font>**
 
-<img src="../../image/mq/image-20211114180301043.png" alt="image-20211114180301043" style="zoom:50%;" />
+<img src="../../image/ComputerNetwork/image-20211114180301043.png" alt="image-20211114180301043" style="zoom:50%;" />
 
 假设A想向B证明自己的身份，B要求A的密码作为身份证明，因此A就会像B提供自己的密码，如果这个密码被攻击者C给截获到，那么E也能够假冒A对B进行访问，所以如果这个过程中Session ID或者Session Ticket和post报文被截获到，那么E就能够通过A的Session ID或者Session Ticket向B发送POST报文，而POST报文通常是会引起数据的变化，因此重放攻击可能会导致用户在不知情的情况下，数据库被攻击者破坏
 
@@ -1286,7 +1288,7 @@ Connection: Upgrade\r\n
 
 > 因为毕竟`WebSocket`也是基于TCP的，所以还是要面对TCP的粘包问题的，这里仍然是在应用层通过定义数据长度的方式来解决
 
-另外，可以看到，我们存放** payload 长度的字段有好几个**，我们既可以用最前面的`7bit`, 也可以用后面的`7+16bit 或 7+64bit。`
+另外，可以看到，我们存放**payload 长度的字段有好几个**，我们既可以用最前面的`7bit`, 也可以用后面的`7+16bit 或 7+64bit。`
 
 那么问题就来了。
 
