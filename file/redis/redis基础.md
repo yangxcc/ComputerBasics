@@ -14,7 +14,7 @@ NoSQL数据库可以分为多个类型，包括键值存储（Key-Value Stores�
 
 ### 概述
 
-
+全称是**RE**mote **DI**ctionary **S**erver，远程字典服务
 
 
 

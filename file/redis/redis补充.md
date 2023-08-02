@@ -1,3 +1,7 @@
+[toc]
+
+
+
 ## Redis底层的数据结构
 
 Redis是由C语言编写的，它支持5中数据类型，以K-V形式进行存储，K是String类型，V可以是String、list、hash、Set、ZSet5种数据结构，每种数据结构都有各自对应的场景
