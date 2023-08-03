@@ -1,3 +1,7 @@
+[toc]
+
+
+
 ## 事务
 
 ### 什么是事务
@@ -132,6 +136,8 @@ SET [SESSION|GLOBAL] TRANSACTION ISOLATION LEVEL [READ UNCOMMITTED|READ COMMITTE
 
 
 **可重复读**
+
+> 可见性算法，右边的事务对于左边是不可见的
 
 ![image-20211207182713443](../../image/MySQL/image-20211207182713443.png)
 
@@ -462,6 +468,8 @@ mysql> select * from t_stu where id = 5;
 **要避免这类特殊场景下发生幻读的现象的话，就是尽量在开启事务之后，马上执行 select ... for update 这类当前读的语句**，因为它会对记录加 next-key lock，从而避免其他事务插入一条新记录
 
 
+
+**两个场景都是先快照读，另一个事务插入数据之后，再当前读**
 
 
 
