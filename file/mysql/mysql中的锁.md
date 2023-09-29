@@ -541,7 +541,7 @@ mysql> select * from user where age = 22 for update;
 - 接着继续扫描，扫描到的第二行是 age = 39，该记录是第一个不符合条件的二级索引记录，所以该二级索引的 next-key 锁会**退化成间隙锁**，范围是 (22, 39)。
 - 停止查询。
 
-<img src="../../image/MySQL/非唯一索引等值查询存在.drawio.webp" style="zoom:80%;" />
+<img src="../../image/MySQL/非唯一索引等值查询存在.drawio.webp" style="zoom:0%;" />
 
 
 
